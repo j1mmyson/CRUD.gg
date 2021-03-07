@@ -101,7 +101,7 @@ func checkError(err error) {
 	}
 }
 
-func main() {
+func crud() {
 	fmt.Println("Go MYSQL Tutorial")
 	var connectionString = fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", user, password, host, database)
 
