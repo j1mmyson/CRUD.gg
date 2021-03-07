@@ -1,24 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"text/template"
 )
 
-var tpl *template.Template
-
-func init() {
-	tpl = template.Must(template.ParseGlob("template/*.htm"))
-}
-
 func index(res http.ResponseWriter, req *http.Request) {
-	// tpl, err := template.ParseFiles("index.htm")
-	// if err != nil {
-	// 	log.Fatalln("error in parsing template", err)
-	// }
 
-	err := tpl.ExecuteTemplate(res, "index.htm", nil)
+	tpl := template.Must(template.ParseFiles("template/index.htm"))
+	err := tpl.Execute(res, nil)
 	if err != nil {
 		log.Fatalln("error executing template", err)
 	}
@@ -27,7 +19,6 @@ func index(res http.ResponseWriter, req *http.Request) {
 func main() {
 	http.HandleFunc("/", index)
 	http.Handle("/template/", http.StripPrefix("/template/", http.FileServer(http.Dir("template"))))
-	// http.Handle("/", http.FileServer(http.Dir("./template")))
-
+	fmt.Println("Listening...")
 	http.ListenAndServe(":8080", nil)
 }
