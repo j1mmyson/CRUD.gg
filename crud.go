@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -10,19 +11,17 @@ import (
 
 const (
 	host     = "localhost"
-	database = "tutorial"
+	database = "gocrud"
 	user     = "byungwook"
 	password = "quddnr!2"
 )
 
 // Topic table columns
-type Topic struct {
-	Id          int
-	Title       string
-	Description string
-	Created     string
-	Author      string
-	Profile     string
+type User struct {
+	Id       int
+	Password string
+	Name     string
+	Created  string
 }
 
 // Create1 insert data to db
@@ -34,17 +33,21 @@ func Create1(db *sql.DB) {
 }
 
 // Create2 insert data to db
-func Create2(db *sql.DB) {
+func Create2(db *sql.DB, req *http.Request) {
+	// req.ParseForm()
+	id := req.PostFormValue("id")
+	password := req.PostFormValue("password")
+	name := req.PostFormValue("name")
+	t := time.Now().Format("2006-01-02 15:04:05")
 	// Create 2
-	stmt, err := db.Prepare("insert into topic (title, description, created, author, profile) values (?, ?, ?, ?, ?)")
+	stmt, err := db.Prepare("insert into user (id, password, name, created) values (?, ?, ?, ?)")
 	checkError(err)
 	defer stmt.Close()
-	t := time.Now().Format("2006-01-02 15:04:05")
-	res, err := stmt.Exec("golang", "hello golang!", t, "jimmy", "developer")
+	res, err := stmt.Exec(id, password, name, t)
 	checkError(err)
 	count, err := res.RowsAffected()
 	checkError(err)
-	fmt.Println(count)
+	fmt.Println(count, "rows affected")
 }
 
 // Read select all data from db
@@ -52,12 +55,12 @@ func Read(db *sql.DB) {
 	// Read
 	rows, err := db.Query("select * from topic")
 	checkError(err)
-	var topic = Topic{}
+	var user = User{}
 
 	for rows.Next() {
-		err = rows.Scan(&topic.Id, &topic.Title, &topic.Description, &topic.Created, &topic.Author, &topic.Profile)
+		err = rows.Scan(&user.Id, &user.Password, &user.Name, &user.Created)
 		checkError(err)
-		fmt.Println(topic)
+		fmt.Println(user)
 	}
 }
 
@@ -112,7 +115,7 @@ func crud() {
 	pingDB(db)
 
 	Read(db)
-	Create2(db)
+	// Create2(db)
 	Read(db)
 
 }
