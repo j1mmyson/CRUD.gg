@@ -11,6 +11,9 @@ import (
 )
 
 func index(res http.ResponseWriter, req *http.Request) {
+	if req.Method == "POST" {
+		fmt.Println("post method in index page;")
+	}
 	tpl := template.Must(template.ParseFiles("template/index.htm"))
 	err := tpl.Execute(res, nil)
 	if err != nil {
@@ -19,17 +22,17 @@ func index(res http.ResponseWriter, req *http.Request) {
 }
 
 func signUp(res http.ResponseWriter, req *http.Request) {
-	fmt.Println("signUp")
-	tpl := template.Must(template.ParseFiles("template/signUp.htm"))
-	err := tpl.Execute(res, nil)
-	if err != nil {
-		log.Fatalln("error executing template", err)
+	if req.Method == "GET" {
+		tpl := template.Must(template.ParseFiles("template/signUp.htm"))
+		err := tpl.Execute(res, nil)
+		if err != nil {
+			log.Fatalln("error executing template", err)
+		}
 	}
 
 	if req.Method == "POST" {
-		fmt.Println(db)
-		fmt.Println("Create2 worked")
 		Create2(db, req)
+		http.Redirect(res, req, "/", http.StatusSeeOther)
 	}
 }
 
