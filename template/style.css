@@ -36,13 +36,32 @@ body{
 
 .small-logo{
     font-style:inherit;
-    text-align: center;
+    text-align: left;
     width: 40%;
     font-size: 1em;
-    padding-left: 30%;
-    padding-right: 30%;
+    padding-left: 5%;
+    padding-right: 5%;
     opacity: 100%;
     color:ivory;
-    display: inline-block;
+    float: left;
+    /* display: block; */
     margin-block-end: 0em;
+}
+
+.user_profile{
+    font-style:inherit;
+    text-align: right;
+    width: 40%;
+    font-size: 1em;
+    padding-left: 5%;
+    padding-right: 5%;
+    opacity: 100%;
+    color:ivory;
+    float: left;
+    /* display:block; */
+    margin-block-end: 0em;
+}
+
+.center{
+    text-align: center;
 }

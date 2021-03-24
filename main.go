@@ -10,14 +10,25 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func index(res http.ResponseWriter, req *http.Request) {
+func login(res http.ResponseWriter, req *http.Request) {
 	if req.Method == "POST" {
 		fmt.Println("post method in index page;")
-	}
-	tpl := template.Must(template.ParseFiles("template/index.htm"))
-	err := tpl.Execute(res, nil)
-	if err != nil {
-		log.Fatalln("error executing template", err)
+		user, err := Read(db, req)
+		if err != nil {
+			log.Println("Login failed")
+		} else {
+			tpl := template.Must(template.ParseFiles("template/index.gohtml"))
+			err := tpl.Execute(res, user)
+			if err != nil {
+				log.Println("error executing template", err)
+			}
+		}
+	} else {
+		tpl := template.Must(template.ParseFiles("template/login.htm"))
+		err := tpl.Execute(res, nil)
+		if err != nil {
+			log.Fatalln("error executing template", err)
+		}
 	}
 }
 
@@ -42,13 +53,13 @@ func main() {
 	var connectionString = fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", user, password, host, database)
 	var err error
 	// Connect to mysql server
-	fmt.Println(db)
+	// fmt.Println(db)
 	db, err = sql.Open("mysql", connectionString)
 	checkError(err)
 	defer db.Close()
 	pingDB(db)
-	fmt.Println(db)
-	http.HandleFunc("/", index)
+	// fmt.Println(db)
+	http.HandleFunc("/", login)
 	http.HandleFunc("/signUp", signUp)
 	http.Handle("/template/", http.StripPrefix("/template/", http.FileServer(http.Dir("template"))))
 	fmt.Println("Listening...")

@@ -16,12 +16,27 @@ const (
 	password = "quddnr!2"
 )
 
+// CustomError: error type struct
+type CustomError struct {
+	Code    string
+	Message string
+}
+
 // Topic table columns
 type User struct {
-	Id       int
+	Id       string
 	Password string
 	Name     string
 	Created  string
+}
+
+type Input struct {
+	Id       string
+	Password string
+}
+
+func (e *CustomError) Error() string {
+	return e.Code + ", " + e.Message
 }
 
 // Create1 insert data to db
@@ -51,17 +66,23 @@ func Create2(db *sql.DB, req *http.Request) {
 }
 
 // Read select all data from db
-func Read(db *sql.DB) {
+func Read(db *sql.DB, req *http.Request) (User, error) {
 	// Read
-	rows, err := db.Query("select * from topic")
+	id, pw := req.PostFormValue("id"), req.PostFormValue("password")
+	rows, err := db.Query("select * from user where id = ?", id)
 	checkError(err)
 	var user = User{}
 
 	for rows.Next() {
-		err = rows.Scan(&user.Id, &user.Password, &user.Name, &user.Created)
+		err = rows.Scan(&user.Id, &user.Password, &user.Created, &user.Name)
 		checkError(err)
 		fmt.Println(user)
 	}
+	if pw != user.Password {
+		return user, &CustomError{Code: "401", Message: "password uncorrect!"}
+	}
+
+	return user, nil
 }
 
 // Update change data from db
@@ -113,9 +134,5 @@ func crud() {
 	checkError(err)
 	defer db.Close()
 	pingDB(db)
-
-	Read(db)
-	// Create2(db)
-	Read(db)
 
 }
