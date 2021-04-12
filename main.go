@@ -3,65 +3,106 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"text/template"
+
+	"github.com/google/uuid"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func login(res http.ResponseWriter, req *http.Request) {
-	if req.Method == "POST" {
-		fmt.Println("post method in index page;")
-		user, err := Read(db, req)
-		if err != nil {
-			log.Println("Login failed")
-		} else {
-			tpl := template.Must(template.ParseFiles("template/index.gohtml"))
-			err := tpl.Execute(res, user)
-			if err != nil {
-				log.Println("error executing template", err)
-			}
-		}
-	} else {
-		tpl := template.Must(template.ParseFiles("template/login.htm"))
-		err := tpl.Execute(res, nil)
-		if err != nil {
-			log.Fatalln("error executing template", err)
-		}
-	}
-}
-
-func signUp(res http.ResponseWriter, req *http.Request) {
-	if req.Method == "GET" {
-		tpl := template.Must(template.ParseFiles("template/signUp.htm"))
-		err := tpl.Execute(res, nil)
-		if err != nil {
-			log.Fatalln("error executing template", err)
-		}
-	}
-
-	if req.Method == "POST" {
-		Create2(db, req)
-		http.Redirect(res, req, "/", http.StatusSeeOther)
-	}
-}
-
 var db *sql.DB
+var tpl *template.Template
+
+func init() {
+	tpl = template.Must(template.ParseGlob("templates/*.gohtml"))
+}
 
 func main() {
 	var connectionString = fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", user, password, host, database)
 	var err error
 	// Connect to mysql server
-	// fmt.Println(db)
 	db, err = sql.Open("mysql", connectionString)
 	checkError(err)
 	defer db.Close()
 	pingDB(db)
-	// fmt.Println(db)
+
 	http.HandleFunc("/", login)
-	http.HandleFunc("/signUp", signUp)
-	http.Handle("/template/", http.StripPrefix("/template/", http.FileServer(http.Dir("template"))))
+	http.HandleFunc("/signup", signUp)
+	http.HandleFunc("/index", index)
+	http.HandleFunc("/logout", logout)
+	http.Handle("/templates/", http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 	fmt.Println("Listening...")
 	http.ListenAndServe(":8080", nil)
+}
+
+func index(w http.ResponseWriter, req *http.Request) {
+	u := getUser(w, req)
+	fmt.Println(u)
+	if !alreadyLoggedIn(req) {
+		http.Redirect(w, req, "/", http.StatusSeeOther)
+		return
+	}
+	tpl.ExecuteTemplate(w, "index.gohtml", u)
+}
+
+func login(w http.ResponseWriter, req *http.Request) {
+	if alreadyLoggedIn(req) {
+		http.Redirect(w, req, "/index", http.StatusSeeOther)
+		return
+	}
+
+	if req.Method == http.MethodPost {
+		user, err := ReadUser(db, req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		sID := uuid.New()
+		c := &http.Cookie{
+			Name:  "session",
+			Value: sID.String(),
+		}
+		http.SetCookie(w, c)
+		CreateSession(db, c.Value, user.Id)
+		http.Redirect(w, req, "/index", http.StatusSeeOther)
+		return
+	}
+
+	tpl.ExecuteTemplate(w, "login.gohtml", nil)
+}
+
+func signUp(w http.ResponseWriter, req *http.Request) {
+	if alreadyLoggedIn(req) {
+		http.Redirect(w, req, "/index", http.StatusSeeOther)
+		return
+	}
+	if req.Method == http.MethodGet {
+		tpl.ExecuteTemplate(w, "signup.gohtml", nil)
+	}
+
+	if req.Method == http.MethodPost {
+		CreateUser(db, req)
+		http.Redirect(w, req, "/", http.StatusSeeOther)
+	}
+}
+
+func logout(w http.ResponseWriter, req *http.Request) {
+	if !alreadyLoggedIn(req) {
+		http.Redirect(w, req, "/", http.StatusSeeOther)
+		return
+	}
+	c, _ := req.Cookie("session")
+	// delete session
+	DeleteSession(db, c.Value)
+
+	//
+	c = &http.Cookie{
+		Name:   "session",
+		Value:  "",
+		MaxAge: -1,
+	}
+	http.SetCookie(w, c)
+
+	http.Redirect(w, req, "/", http.StatusSeeOther)
 }

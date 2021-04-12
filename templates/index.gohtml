@@ -1,0 +1,24 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CRUD.gg</title>
+    <link rel="stylesheet" href="templates/style.css">
+</head>
+<body>
+    <div>
+        <div class="small-logo">
+            <h2><a href="/">CRUD.gg</a></h2>
+        </div>
+        <div class="user_profile">
+            <h3> {{.Name}} 님</h3>
+        </div>
+    </div>
+    <div class="logo">Profile</div>
+    <div class="center">
+    <p> -ID : {{.Id}}</p>
+    <p> -Password : {{.Password}}</p>
+    <p> -Created : {{.Created}}</p>
+    <p> -Name : {{.Name}}</p>
+    </div>
+</body>
+</html>

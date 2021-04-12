@@ -3,10 +3,12 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -47,8 +49,17 @@ func Create1(db *sql.DB) {
 	defer insert.Close()
 }
 
+func CreateSession(db *sql.DB, sessionId string, userId string) {
+	stmt, err := db.Prepare("insert into session values (?, ?)")
+	checkError(err)
+	defer stmt.Close()
+	_, err = stmt.Exec(sessionId, userId)
+	checkError(err)
+
+}
+
 // Create2 insert data to db
-func Create2(db *sql.DB, req *http.Request) {
+func CreateUser(db *sql.DB, req *http.Request) {
 	// req.ParseForm()
 	id := req.PostFormValue("id")
 	password := req.PostFormValue("password")
@@ -58,15 +69,44 @@ func Create2(db *sql.DB, req *http.Request) {
 	stmt, err := db.Prepare("insert into user (id, password, name, created) values (?, ?, ?, ?)")
 	checkError(err)
 	defer stmt.Close()
-	res, err := stmt.Exec(id, password, name, t)
+
+	bs, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	_, err = stmt.Exec(id, bs, name, t)
 	checkError(err)
-	count, err := res.RowsAffected()
+}
+
+func ReadSession(db *sql.DB, sessionId string) (string, error) {
+	row, err := db.Query("select user_id from session where session_id = ?", sessionId)
 	checkError(err)
-	fmt.Println(count, "rows affected")
+	var userId string
+
+	for row.Next() {
+		err = row.Scan(&userId)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("userId = ", userId)
+	}
+	return userId, nil
+}
+
+func ReadUserById(db *sql.DB, userId string) (User, error) {
+	row, err := db.Query("select * from user where id = ?", userId)
+	checkError(err)
+	var user = User{}
+	for row.Next() {
+		err := row.Scan(&user.Id, &user.Password, &user.Created, &user.Name)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(user)
+	}
+
+	return user, nil
 }
 
 // Read select all data from db
-func Read(db *sql.DB, req *http.Request) (User, error) {
+func ReadUser(db *sql.DB, req *http.Request) (User, error) {
 	// Read
 	id, pw := req.PostFormValue("id"), req.PostFormValue("password")
 	rows, err := db.Query("select * from user where id = ?", id)
@@ -76,9 +116,9 @@ func Read(db *sql.DB, req *http.Request) (User, error) {
 	for rows.Next() {
 		err = rows.Scan(&user.Id, &user.Password, &user.Created, &user.Name)
 		checkError(err)
-		fmt.Println(user)
 	}
-	if pw != user.Password {
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pw))
+	if err != nil {
 		return user, &CustomError{Code: "401", Message: "password uncorrect!"}
 	}
 
@@ -100,10 +140,19 @@ func Update(db *sql.DB) {
 	fmt.Println(a, "rows in set")
 }
 
+func DeleteSession(db *sql.DB, sessionID string) {
+	stmt, err := db.Prepare("delete from session where session_id=?")
+	checkError(err)
+
+	_, err = stmt.Exec(sessionID)
+	checkError(err)
+
+}
+
 // Delete delete data from db
 func Delete(db *sql.DB) {
 	// Delete
-	stmt, err := db.Prepare("delete from topic where id=?")
+	stmt, err := db.Prepare("delete from user where id=?")
 	checkError(err)
 
 	res, err := stmt.Exec(5)
