@@ -1,4 +1,5 @@
 # Binaries for programs and plugins
+Go_CRUD
 *.exe
 *.exe~
 *.dll
