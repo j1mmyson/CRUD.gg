@@ -5,17 +5,26 @@ import (
 	"fmt"
 	"net/http"
 	"text/template"
+	"time"
 
 	"github.com/google/uuid"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
-var tpl *template.Template
+// var db *sql.DB
+// var tpl *template.Template
+var (
+	db               *sql.DB
+	tpl              *template.Template
+	dbSessionCleaned time.Time
+)
+
+const sessionLength int = 60
 
 func init() {
 	tpl = template.Must(template.ParseGlob("templates/*.gohtml"))
+	dbSessionCleaned = time.Now()
 }
 
 func main() {
@@ -37,17 +46,16 @@ func main() {
 }
 
 func index(w http.ResponseWriter, req *http.Request) {
-	u := getUser(w, req)
-	fmt.Println(u)
-	if !alreadyLoggedIn(req) {
+	if !alreadyLoggedIn(w, req) {
 		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
+	u := getUser(w, req)
 	tpl.ExecuteTemplate(w, "index.gohtml", u)
 }
 
 func login(w http.ResponseWriter, req *http.Request) {
-	if alreadyLoggedIn(req) {
+	if alreadyLoggedIn(w, req) {
 		http.Redirect(w, req, "/index", http.StatusSeeOther)
 		return
 	}
@@ -73,7 +81,7 @@ func login(w http.ResponseWriter, req *http.Request) {
 }
 
 func signUp(w http.ResponseWriter, req *http.Request) {
-	if alreadyLoggedIn(req) {
+	if alreadyLoggedIn(w, req) {
 		http.Redirect(w, req, "/index", http.StatusSeeOther)
 		return
 	}
@@ -88,7 +96,7 @@ func signUp(w http.ResponseWriter, req *http.Request) {
 }
 
 func logout(w http.ResponseWriter, req *http.Request) {
-	if !alreadyLoggedIn(req) {
+	if !alreadyLoggedIn(w, req) {
 		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
@@ -103,6 +111,10 @@ func logout(w http.ResponseWriter, req *http.Request) {
 		MaxAge: -1,
 	}
 	http.SetCookie(w, c)
+
+	if time.Now().Sub(dbSessionCleaned) > (time.Second * 30) {
+		go CleanSessions(db)
+	}
 
 	http.Redirect(w, req, "/", http.StatusSeeOther)
 }

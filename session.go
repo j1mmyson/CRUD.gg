@@ -9,6 +9,7 @@ import (
 )
 
 func getUser(w http.ResponseWriter, req *http.Request) User {
+	fmt.Println("getUser()")
 	// get cookie
 	c, err := req.Cookie("session")
 	if err != nil {
@@ -19,32 +20,38 @@ func getUser(w http.ResponseWriter, req *http.Request) User {
 		}
 
 	}
+	c.MaxAge = sessionLength
 	http.SetCookie(w, c)
 
 	// if the user exists already, get user
 	var u User
 
 	un, err := ReadSession(db, c.Value)
-	fmt.Println("2 un = ", un)
-	fmt.Println(err)
 	if err != nil {
 		log.Fatal(err)
 	}
+	UpdateCurrentTime(db, un)
 	u, _ = ReadUserById(db, un)
-	fmt.Println("user in getUser() = ", u)
 	return u
 }
 
-func alreadyLoggedIn(req *http.Request) bool {
+func alreadyLoggedIn(w http.ResponseWriter, req *http.Request) bool {
+	fmt.Println("alreadyLoggedIn()")
 	c, err := req.Cookie("session")
 	if err != nil {
 		return false
 	}
 
-	un, _ := ReadSession(db, c.Value)
+	un, err := ReadSession(db, c.Value)
+	if err != nil {
+		return false
+	}
+	UpdateCurrentTime(db, un)
 	_, err = ReadUserById(db, un)
-	// un := dbSessions[c.Value]
-	// _, ok := dbUsers[un]
+
+	c.MaxAge = sessionLength
+	http.SetCookie(w, c)
+
 	if err != nil {
 		return false
 	}

@@ -50,10 +50,10 @@ func Create1(db *sql.DB) {
 }
 
 func CreateSession(db *sql.DB, sessionId string, userId string) {
-	stmt, err := db.Prepare("insert into session values (?, ?)")
+	stmt, err := db.Prepare("insert into session values (?, ?, ?)")
 	checkError(err)
 	defer stmt.Close()
-	_, err = stmt.Exec(sessionId, userId)
+	_, err = stmt.Exec(sessionId, userId, time.Now().Format("2006-01-02 15:04:05"))
 	checkError(err)
 
 }
@@ -76,8 +76,10 @@ func CreateUser(db *sql.DB, req *http.Request) {
 }
 
 func ReadSession(db *sql.DB, sessionId string) (string, error) {
+	fmt.Println("ReadSession()")
 	row, err := db.Query("select user_id from session where session_id = ?", sessionId)
 	checkError(err)
+	defer row.Close()
 	var userId string
 
 	for row.Next() {
@@ -85,21 +87,21 @@ func ReadSession(db *sql.DB, sessionId string) (string, error) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("userId = ", userId)
 	}
 	return userId, nil
 }
 
 func ReadUserById(db *sql.DB, userId string) (User, error) {
+	fmt.Println("ReadUserById()")
 	row, err := db.Query("select * from user where id = ?", userId)
 	checkError(err)
+	defer row.Close()
 	var user = User{}
 	for row.Next() {
 		err := row.Scan(&user.Id, &user.Password, &user.Created, &user.Name)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(user)
 	}
 
 	return user, nil
@@ -111,6 +113,7 @@ func ReadUser(db *sql.DB, req *http.Request) (User, error) {
 	id, pw := req.PostFormValue("id"), req.PostFormValue("password")
 	rows, err := db.Query("select * from user where id = ?", id)
 	checkError(err)
+	defer rows.Close()
 	var user = User{}
 
 	for rows.Next() {
@@ -140,8 +143,40 @@ func Update(db *sql.DB) {
 	fmt.Println(a, "rows in set")
 }
 
+func UpdateCurrentTime(db *sql.DB, sessionID string) {
+	stmt, err := db.Prepare("UPDATE session SET `current_time`=? WHERE `user_id`=?")
+	checkError(err)
+	defer stmt.Close()
+
+	_, err = stmt.Exec(time.Now().Format("2006-01-02 15:04:05"), sessionID)
+	checkError(err)
+}
+
+func CleanSessions(db *sql.DB) {
+
+	var sessionID string
+	var currentTime string
+	rows, err := db.Query("select session_id, current_id from session")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&sessionID, &currentTime)
+		if err != nil {
+			log.Fatal(err)
+		}
+		t, _ := time.Parse("2006-01-02 15:04:05", currentTime)
+		if time.Now().Sub(t) > (time.Second * 30) {
+			DeleteSession(db, sessionID)
+		}
+	}
+
+	dbSessionCleaned = time.Now()
+}
+
 func DeleteSession(db *sql.DB, sessionID string) {
-	stmt, err := db.Prepare("delete from session where session_id=?")
+	stmt, err := db.Prepare("delete from session where `session_id`=?")
 	checkError(err)
 
 	_, err = stmt.Exec(sessionID)
