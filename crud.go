@@ -11,13 +11,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const (
-	host     = "localhost"
-	database = "gocrud"
-	user     = "byungwook"
-	password = "quddnr!2"
-)
-
 // CustomError: error type struct
 type CustomError struct {
 	Code    string
@@ -156,7 +149,7 @@ func CleanSessions(db *sql.DB) {
 
 	var sessionID string
 	var currentTime string
-	rows, err := db.Query("select session_id, current_id from session")
+	rows, err := db.Query("select session_id, current_time from session")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -187,7 +180,7 @@ func DeleteSession(db *sql.DB, sessionID string) {
 // Delete delete data from db
 func Delete(db *sql.DB) {
 	// Delete
-	stmt, err := db.Prepare("delete from user where id=?")
+	stmt, err := db.Prepare("delete from user where `id`=?")
 	checkError(err)
 
 	res, err := stmt.Exec(5)

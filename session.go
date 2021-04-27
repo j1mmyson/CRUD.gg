@@ -18,7 +18,6 @@ func getUser(w http.ResponseWriter, req *http.Request) User {
 			Name:  "session",
 			Value: sID.String(),
 		}
-
 	}
 	c.MaxAge = sessionLength
 	http.SetCookie(w, c)
