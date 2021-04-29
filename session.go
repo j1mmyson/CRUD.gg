@@ -45,14 +45,15 @@ func alreadyLoggedIn(w http.ResponseWriter, req *http.Request) bool {
 	if err != nil {
 		return false
 	}
+
 	UpdateCurrentTime(db, un)
+
 	_, err = ReadUserById(db, un)
-
-	c.MaxAge = sessionLength
-	http.SetCookie(w, c)
-
 	if err != nil {
 		return false
 	}
+
+	c.MaxAge = sessionLength
+	http.SetCookie(w, c)
 	return true
 }

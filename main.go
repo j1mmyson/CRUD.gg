@@ -28,13 +28,17 @@ func init() {
 }
 
 func main() {
+	fmt.Println("HEad")
 	var connectionString = fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", user, password, host, database)
 	var err error
+	fmt.Println("connection check..")
 	// Connect to mysql server
 	db, err = sql.Open("mysql", connectionString)
+	fmt.Println("Connecting to DB..")
 	checkError(err)
 	defer db.Close()
 	pingDB(db)
+	fmt.Println("Connected to DB")
 
 	http.HandleFunc("/", login)
 	http.HandleFunc("/signup", signUp)
@@ -42,7 +46,7 @@ func main() {
 	http.HandleFunc("/logout", logout)
 	http.Handle("/templates/", http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 	fmt.Println("Listening...")
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":80", nil)
 }
 
 func index(w http.ResponseWriter, req *http.Request) {
