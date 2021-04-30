@@ -23,12 +23,12 @@ var (
 const sessionLength int = 60
 
 func init() {
-	tpl = template.Must(template.ParseGlob("templates/*.gohtml"))
+	tpl = template.Must(template.ParseGlob("web/templates/*.gohtml"))
 	dbSessionCleaned = time.Now()
 }
 
 func main() {
-	fmt.Println("HEad")
+	fmt.Println("Head")
 	var connectionString = fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", user, password, host, database)
 	var err error
 	fmt.Println("connection check..")
@@ -44,9 +44,10 @@ func main() {
 	http.HandleFunc("/signup", signUp)
 	http.HandleFunc("/index", index)
 	http.HandleFunc("/logout", logout)
-	http.Handle("/templates/", http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
+	http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
+	// http.Handle("/templates/", http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 	fmt.Println("Listening...")
-	http.ListenAndServe(":80", nil)
+	http.ListenAndServe(":8080", nil)
 }
 
 func index(w http.ResponseWriter, req *http.Request) {
