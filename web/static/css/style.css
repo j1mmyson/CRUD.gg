@@ -65,3 +65,8 @@ body{
 .center{
     text-align: center;
 }
+
+.fail {
+    /* opacity: 0%; */
+    color: deeppink;
+}

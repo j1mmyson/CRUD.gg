@@ -68,7 +68,10 @@ func login(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		user, err := ReadUser(db, req)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusForbidden)
+			// http.Redirect(w, req, "/login", err.StatusCode())
+			// http.Error(w, err.Error(), err.StatusCode())
+			errMsg := map[string]interface{}{"error": err}
+			tpl.ExecuteTemplate(w, "login.gohtml", errMsg)
 			return
 		}
 		sID := uuid.New()

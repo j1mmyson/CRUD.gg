@@ -5,17 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// CustomError: error type struct
-type CustomError struct {
-	Code    string
-	Message string
-}
 
 // Topic table columns
 type User struct {
@@ -30,8 +25,19 @@ type Input struct {
 	Password string
 }
 
+// CustomError: error type struct
+type CustomError struct {
+	Code    string
+	Message string
+}
+
 func (e *CustomError) Error() string {
 	return e.Code + ", " + e.Message
+}
+
+func (e *CustomError) StatusCode() int {
+	result, _ := strconv.Atoi(e.Code)
+	return result
 }
 
 // Create1 insert data to db
@@ -101,13 +107,18 @@ func ReadUserById(db *sql.DB, userId string) (User, error) {
 }
 
 // Read select all data from db
-func ReadUser(db *sql.DB, req *http.Request) (User, error) {
+func ReadUser(db *sql.DB, req *http.Request) (User, *CustomError) {
 	// Read
 	id, pw := req.PostFormValue("id"), req.PostFormValue("password")
 	rows, err := db.Query("select * from user where id = ?", id)
 	checkError(err)
 	defer rows.Close()
+
 	var user = User{}
+
+	if !rows.Next() {
+		return user, &CustomError{Code: "401", Message: "ID doesn't exist."}
+	}
 
 	for rows.Next() {
 		err = rows.Scan(&user.Id, &user.Password, &user.Created, &user.Name)
@@ -115,7 +126,7 @@ func ReadUser(db *sql.DB, req *http.Request) (User, error) {
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pw))
 	if err != nil {
-		return user, &CustomError{Code: "401", Message: "password uncorrect!"}
+		return user, &CustomError{Code: "401", Message: "uncorrect password."}
 	}
 
 	return user, nil
