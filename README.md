@@ -22,7 +22,7 @@ I implemented `log-in`, `log-out`, `sign-up` and `something else`..
 
 - #### Deplotment: AWS EC2, AWS RDS
 
-- #### Front-End: Go templates
+- #### Front-End: Go templates, java script
 
 ## Getting Started
 
