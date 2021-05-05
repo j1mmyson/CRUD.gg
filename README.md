@@ -1,10 +1,10 @@
-# GoCrud
+# CRUD.gg
 
 ---
 
 ![Main Page](https://github.com/j1mmyson/j1mmyson.github.io/blob/master/assets/img/posts/devlog/login.png?raw=true)
 
-GoCrud is a side project designed to practice developing web and go.  
+`CRUD.gg` is a side project designed to practice developing web and go.  
 I implemented `log-in`, `log-out`, `sign-up` and `something else`.. 
 
 ## Link
@@ -20,7 +20,7 @@ I implemented `log-in`, `log-out`, `sign-up` and `something else`..
 
 - #### DataBase: Mysql
 
-- #### Deplotment: AWS EC2, AWS RDS
+- #### Deployment: AWS EC2, AWS RDS
 
 - #### Front-End: Go templates, java script
 
@@ -51,5 +51,5 @@ I implemented `log-in`, `log-out`, `sign-up` and `something else`..
 
 - [ ] Find password (Give temporary password)
 - [ ] Change password
-- [ ] Handle input exceptions
+- [v] Handle input exceptions
 - [ ] Prevent duplicate log-in
