@@ -10,10 +10,13 @@
     </div>
     <div class="logo">Sign Up</div>
     <form class = "input" action="" method="post">
-        <h4> ID: <input type="text" name="id" id="id"> </h4>
+        <h4> ID: <input type="text" name="id" id="id"></h4>
         <h4> 이름: <input type="text" name="name" id="name"></h4>
         <h4> PASSWORD: <input type="password" name="password" id="pw"> </h4>
         <h4> Check PW: <input type="password" name="check" id="check"></h4>
+        {{if .error}}
+        <h5 class="fail"> {{.error.Code}}: {{.error.Message}}</h5>
+        {{end}}
         <input id = "submitBtn" type="submit"  value="Create">
     </form>
     

@@ -68,8 +68,6 @@ func login(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		user, err := ReadUser(db, req)
 		if err != nil {
-			// http.Redirect(w, req, "/login", err.StatusCode())
-			// http.Error(w, err.Error(), err.StatusCode())
 			errMsg := map[string]interface{}{"error": err}
 			tpl.ExecuteTemplate(w, "login.gohtml", errMsg)
 			return
@@ -98,8 +96,14 @@ func signUp(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if req.Method == http.MethodPost {
-		CreateUser(db, req)
-		http.Redirect(w, req, "/", http.StatusSeeOther)
+		err := CreateUser(db, req)
+		if err != nil {
+			errMsg := map[string]interface{}{"error": err}
+			tpl.ExecuteTemplate(w, "signup.gohtml", errMsg)
+		} else {
+			http.Redirect(w, req, "/", http.StatusSeeOther)
+		}
+		return
 	}
 }
 

@@ -58,7 +58,7 @@ func CreateSession(db *sql.DB, sessionId string, userId string) {
 }
 
 // Create2 insert data to db
-func CreateUser(db *sql.DB, req *http.Request) {
+func CreateUser(db *sql.DB, req *http.Request) *CustomError {
 	// req.ParseForm()
 	id := req.PostFormValue("id")
 	password := req.PostFormValue("password")
@@ -71,7 +71,11 @@ func CreateUser(db *sql.DB, req *http.Request) {
 
 	bs, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	_, err = stmt.Exec(id, bs, name, t)
-	checkError(err)
+	if err != nil {
+		fmt.Println("error:", err)
+		return &CustomError{Code: "1062", Message: "already exists id."}
+	}
+	return nil
 }
 
 func ReadSession(db *sql.DB, sessionId string) (string, error) {
@@ -118,12 +122,10 @@ func ReadUser(db *sql.DB, req *http.Request) (User, *CustomError) {
 
 	if !rows.Next() {
 		return user, &CustomError{Code: "401", Message: "ID doesn't exist."}
+	} else {
+		_ = rows.Scan(&user.Id, &user.Password, &user.Created, &user.Name)
 	}
 
-	for rows.Next() {
-		err = rows.Scan(&user.Id, &user.Password, &user.Created, &user.Name)
-		checkError(err)
-	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pw))
 	if err != nil {
 		return user, &CustomError{Code: "401", Message: "uncorrect password."}
