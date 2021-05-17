@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"embed"
 	"fmt"
 	"net/http"
 	"text/template"
@@ -19,6 +20,9 @@ var (
 	tpl              *template.Template
 	dbSessionCleaned time.Time
 )
+
+//go:embed web
+var content embed.FS
 
 const sessionLength int = 60
 
@@ -44,9 +48,8 @@ func main() {
 	http.HandleFunc("/signup", signUp)
 	http.HandleFunc("/index", index)
 	http.HandleFunc("/logout", logout)
-	http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
-	// http.Handle("/templates/", http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
-	fmt.Println("Listening...")
+	http.Handle("/web/", http.FileServer(http.FS(content)))
+	fmt.Println("Listening...ss")
 	http.ListenAndServe(":8080", nil)
 }
 
