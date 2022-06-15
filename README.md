@@ -2,17 +2,12 @@
 
 ---
 
-![Main Page](https://github.com/j1mmyson/j1mmyson.github.io/blob/master/assets/img/posts/devlog/login.png?raw=true)
+![Main Page](https://github.com/j1mmyson/j1mmyson.github.io/blob/main/assets/img/posts/devlog/login.png?raw=true)
 
 `CRUD.gg` is a side project designed to practice developing web and go.  
 I implemented `log-in`, `log-out`, `sign-up` and `something else`.. 
 
-## Link
 
-> AWS EC2의 public ip는 유동 ip를 부여받기 때문에 유효하지 않은 주소일 수 있습니다..  
-> (The public ip of AWS EC2 may be an invalid address because it is granted a floating ip.)
-
-<http://ec2-3-141-190-12.us-east-2.compute.amazonaws.com/>
 
 ## Used Stacks
 
@@ -51,5 +46,5 @@ I implemented `log-in`, `log-out`, `sign-up` and `something else`..
 
 - [ ] Find password (Give temporary password)
 - [ ] Change password
-- [v] Handle input exceptions
+- [x] Handle input exceptions
 - [ ] Prevent duplicate log-in
