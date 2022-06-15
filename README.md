@@ -1,7 +1,5 @@
 # CRUD.gg
 
----
-
 ![Main Page](https://github.com/j1mmyson/j1mmyson.github.io/blob/main/assets/img/posts/devlog/login.png?raw=true)
 
 `CRUD.gg` is a side project designed to practice developing web and go.  
